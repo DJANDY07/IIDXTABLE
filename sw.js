@@ -1,4 +1,4 @@
-const C = 'iidx-table-159479';
+const C = 'iidx-table-160197';
 const FILES = ['./', './index.html', './manifest.webmanifest', './icon.svg'];
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(C).then(c => c.addAll(FILES)).then(() => self.skipWaiting()));

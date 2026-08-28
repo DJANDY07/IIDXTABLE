@@ -35,15 +35,19 @@ body{font:14px/1.4 -apple-system,"Noto Sans SC","Segoe UI",Roboto,sans-serif;
 .tools select,.tools button{background:var(--panel);color:var(--fg);border:1px solid var(--line);
      border-radius:8px;padding:5px 9px;font-size:12px;font-family:inherit}
 .tools .sp{flex:1}
+.tools .fcount{font-size:12px;color:var(--dim);font-variant-numeric:tabular-nums;
+      white-space:nowrap}
 
 /* ---------- 概览条状图 ---------- */
 .ov{padding:10px}
 .ov h2,.sec h2{font-size:12px;color:var(--dim);margin:0 0 8px;font-weight:600;letter-spacing:1px}
 .ovrow{display:flex;align-items:center;gap:8px;margin-bottom:6px}
-.ovname{flex:0 0 52px;font-size:12px;font-weight:600;text-align:right;color:var(--fg)}
+.ovname{flex:0 0 62px;font-size:12px;font-weight:600;text-align:right;color:var(--fg);
+      white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .bar{flex:1;height:14px;border-radius:4px;overflow:hidden;display:flex;background:#0d0f14}
 .bar i{display:block;height:100%}
-.ovnum{flex:0 0 70px;font-size:11px;color:var(--dim);text-align:right;font-variant-numeric:tabular-nums}
+.ovnum{flex:0 0 62px;font-size:11px;color:var(--dim);text-align:right;
+      white-space:nowrap;font-variant-numeric:tabular-nums}
 .legend{display:flex;flex-wrap:wrap;gap:4px 10px;margin-top:10px;font-size:11px;color:var(--dim)}
 .legend span{display:flex;align-items:center;gap:4px}
 .legend i{width:10px;height:10px;border-radius:2px;display:block}
@@ -55,6 +59,7 @@ body{font:14px/1.4 -apple-system,"Noto Sans SC","Segoe UI",Roboto,sans-serif;
 .sechead .st{font-size:11px;color:var(--dim);font-variant-numeric:tabular-nums}
 .sechead .tg{margin-left:auto;color:var(--dim);font-size:12px}
 .sec.fold .grid,.sec.fold .bar{display:none}
+.sec.empty{display:none}
 .grid{display:grid;gap:5px;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));margin-top:8px}
 
 /* ---------- 谱面方格 ---------- */
@@ -99,13 +104,8 @@ body{font:14px/1.4 -apple-system,"Noto Sans SC","Segoe UI",Roboto,sans-serif;
     <div class="sum hc"><div class="lab">HC 及以上</div><div class="val" id="sHC">0<span class="rest">(余 0)</span></div></div>
   </div>
   <div class="tools">
-    <select id="filter">
-      <option value="all">显示全部</option>
-      <option value="ltEC">只看未达 EC</option>
-      <option value="ltHC">只看未达 HC</option>
-      <option value="noplay">只看 NOPLAY</option>
-      <option value="played">只看已点灯</option>
-    </select>
+    <select id="filter"></select>
+    <span class="fcount" id="fcount"></span>
     <span class="sp"></span>
     <button id="btnExp">导出备份</button>
     <button id="btnImp">导入</button>
@@ -156,6 +156,13 @@ const esc = s => s.replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','
 /* ---------- 状态 ---------- */
 let cur = 0, filter = 'all';
 const OPTS = ST.map(([k,n]) => `<option value="${k}">${n}</option>`).join('');
+
+// 筛选项：lt:XXX = 只看低于该程度的（即未完成），ST 跳过 NOPLAY/FAILED
+const FOPTS = [['all', '显示全部']]
+  .concat(ST.slice(2).map(([k, n]) => ['lt:' + k, `只看未达 ${k}（${n}）`]))
+  .concat([['noplay', '只看 NOPLAY'], ['played', '只看已点灯']]);
+document.getElementById('filter').innerHTML =
+  FOPTS.map(([v, n]) => `<option value="${v}">${n}</option>`).join('');
 
 /* ---------- 渲染 ---------- */
 function renderTabs(){
@@ -233,15 +240,24 @@ function refresh(){
 }
 
 function applyFilter(){
+  // lt:XXX → 只显示强度低于 XXX 的谱面，已达标的全部隐藏
+  const lt = filter.startsWith('lt:') ? RANK[filter.slice(3)] : -1;
+  let shown = 0;
   document.querySelectorAll('.cell').forEach(el=>{
     const r = +el.dataset.r;
     let show = true;
-    if (filter==='ltEC') show = r < EC_R;
-    else if (filter==='ltHC') show = r < HC_R;
+    if (lt >= 0) show = r < lt;
     else if (filter==='noplay') show = r === 0;
     else if (filter==='played') show = r > 0;
     el.classList.toggle('hide', !show);
+    if (show) shown++;
   });
+  // 整段都被筛掉就把分段也收起来，不留空标题
+  document.querySelectorAll('.sec').forEach(sec=>{
+    sec.classList.toggle('empty', !sec.querySelector('.cell:not(.hide)'));
+  });
+  document.getElementById('fcount').textContent =
+    filter === 'all' ? '' : `剩 ${shown} 首`;
 }
 
 /* ---------- 交互 ---------- */
