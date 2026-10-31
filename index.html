@@ -10,7 +10,9 @@
   --bg:#12141a; --panel:#1b1e26; --panel2:#232733; --line:#2f3442;
   --fg:#e7e9ee; --dim:#9aa2b1;
   --NOPLAY:#ffffff; --FAILED:#9aa0a6; --AC:#b06be0; --EC:#37c05a;
-  --NC:#3d8bff; --HC:#ef4444; --EXC:#f5c400; --FC:#22d3ee;
+  --NC:#29c4f0; --HC:#ef4444; --EXC:#f5c400;
+  /* FC 是流动闪烁的彩虹（偏浅，保证上面的黑字看得清） */
+  --FC:linear-gradient(90deg,#ff8f8f,#ffc875,#fff07a,#8ff08f,#7fe6ff,#8fb2ff,#d38fff,#ff8f8f);
 }
 html,body{margin:0;background:var(--bg);color:var(--fg)}
 body{font:14px/1.4 -apple-system,"Noto Sans SC","Segoe UI",Roboto,sans-serif;
@@ -81,7 +83,7 @@ body{font:14px/1.4 -apple-system,"Noto Sans SC","Segoe UI",Roboto,sans-serif;
 /* 初出代数徽章 */
 .cell .ct u{text-decoration:none;border:1px solid rgba(0,0,0,.45);border-radius:3px;
       padding:0 2px;line-height:12px;font-weight:800;opacity:.75}
-.cell.s-AC .ct u,.cell.s-NC .ct u,.cell.s-HC .ct u{border-color:rgba(255,255,255,.55)}
+.cell.s-AC .ct u,.cell.s-HC .ct u{border-color:rgba(255,255,255,.55)}
 .cell .lv{margin-left:auto;opacity:.65;font-weight:700}
 .cell .tt{flex:1;font-size:10.5px;line-height:1.22;font-weight:600;margin-top:3px;
       overflow:hidden;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:3}
@@ -93,7 +95,11 @@ body{font:14px/1.4 -apple-system,"Noto Sans SC","Segoe UI",Roboto,sans-serif;
 .cell.s-AC{background:var(--AC)} .cell.s-EC{background:var(--EC)}
 .cell.s-NC{background:var(--NC)} .cell.s-HC{background:var(--HC)}
 .cell.s-EXC{background:var(--EXC)} .cell.s-FC{background:var(--FC)}
-.cell.s-AC,.cell.s-NC,.cell.s-HC{color:#fff}
+.cell.s-AC,.cell.s-HC{color:#fff}
+.cell.s-FC,.rb{background-size:300% 100% !important;animation:rb 2.4s linear infinite,flash 1.2s ease-in-out infinite}
+@keyframes rb{from{background-position:0 0}to{background-position:150% 0}}
+@keyframes flash{50%{filter:brightness(1.18) saturate(1.25)}}
+@media (prefers-reduced-motion:reduce){.cell.s-FC,.rb{animation:none}}
 .cell.hide{display:none}
 
 #toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(20px);
@@ -229,7 +235,7 @@ function renderTabs(){
 function renderTable(){
   const t = DATA[cur];
   let h = `<div class="ov"><h2>分段进度</h2>${t.groups.map((g,i)=>ovRow(g,i)).join('')}
-    <div class="legend">${ST.map(([k,n])=>`<span><i style="background:var(--${k})"></i>${n}</span>`).join('')}</div></div>`;
+    <div class="legend">${ST.map(([k,n])=>`<span><i${k==='FC'?' class="rb"':''} style="background:var(--${k})"></i>${n}</span>`).join('')}</div></div>`;
   h += t.groups.map((g,i)=>`
     <section class="sec" id="g${i}">
       <div class="sechead" data-fold="${i}">
@@ -272,7 +278,7 @@ function counts(charts){
   return n;
 }
 function barHTML(n, total){
-  return ST.map(([k],i)=> n[i] ? `<i style="background:var(--${k});width:${n[i]/total*100}%"></i>` : '').join('');
+  return ST.map(([k],i)=> n[i] ? `<i${k==='FC'?' class="rb"':''} style="background:var(--${k});width:${n[i]/total*100}%"></i>` : '').join('');
 }
 function sum(n, from){ let s=0; for(let i=from;i<8;i++) s+=n[i]; return s; }
 
