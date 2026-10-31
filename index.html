@@ -97,9 +97,10 @@ body{font:14px/1.4 -apple-system,"Noto Sans SC","Segoe UI",Roboto,sans-serif;
 .cell.s-EXC{background:var(--EXC)} .cell.s-FC{background:var(--FC)}
 .cell.s-AC,.cell.s-HC{color:#fff}
 .cell.s-FC,.rb{animation:rb .6s linear infinite}
-/* EXC 在 红-黄-白 之间来回闪（0.3s 单程，一个来回 0.6s，和 FC 同速） */
-.cell.s-EXC,.rx{animation:rx .3s linear infinite alternate}
-@keyframes rx{0%{background-color:#ff6b6b}50%{background-color:#f5c400}100%{background-color:#ffffff}}
+/* EXC 红→黄→白→黄 硬切换来回闪，无渐变（每色 0.15s，一个来回 0.6s，和 FC 同速） */
+.cell.s-EXC,.rx{animation:rx .6s step-end infinite}
+@keyframes rx{0%,100%{background-color:#ff6b6b}25%{background-color:#f5c400}
+  50%{background-color:#ffffff}75%{background-color:#f5c400}}
 @keyframes rb{0%,100%{background-color:#ff8f8f}16%{background-color:#ffc875}33%{background-color:#fff07a}
   50%{background-color:#8ff08f}66%{background-color:#7fe6ff}83%{background-color:#c79bff}}
 @media (prefers-reduced-motion:reduce){.cell.s-FC,.rb,.cell.s-EXC,.rx{animation:none}}
