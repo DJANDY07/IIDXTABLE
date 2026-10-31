@@ -11,8 +11,8 @@
   --fg:#e7e9ee; --dim:#9aa2b1;
   --NOPLAY:#ffffff; --FAILED:#9aa0a6; --AC:#b06be0; --EC:#37c05a;
   --NC:#29c4f0; --HC:#ef4444; --EXC:#f5c400;
-  /* FC 是流动闪烁的彩虹（偏浅，保证上面的黑字看得清） */
-  --FC:linear-gradient(90deg,#ff8f8f,#ffc875,#fff07a,#8ff08f,#7fe6ff,#8fb2ff,#d38fff,#ff8f8f);
+  /* FC 整格在彩虹色之间快速变换（偏浅，保证上面的黑字看得清）；这里是静止时的底色 */
+  --FC:#fff07a;
 }
 html,body{margin:0;background:var(--bg);color:var(--fg)}
 body{font:14px/1.4 -apple-system,"Noto Sans SC","Segoe UI",Roboto,sans-serif;
@@ -96,9 +96,9 @@ body{font:14px/1.4 -apple-system,"Noto Sans SC","Segoe UI",Roboto,sans-serif;
 .cell.s-NC{background:var(--NC)} .cell.s-HC{background:var(--HC)}
 .cell.s-EXC{background:var(--EXC)} .cell.s-FC{background:var(--FC)}
 .cell.s-AC,.cell.s-HC{color:#fff}
-.cell.s-FC,.rb{background-size:300% 100% !important;animation:rb 2.4s linear infinite,flash 1.2s ease-in-out infinite}
-@keyframes rb{from{background-position:0 0}to{background-position:150% 0}}
-@keyframes flash{50%{filter:brightness(1.18) saturate(1.25)}}
+.cell.s-FC,.rb{animation:rb .6s linear infinite}
+@keyframes rb{0%,100%{background-color:#ff8f8f}16%{background-color:#ffc875}33%{background-color:#fff07a}
+  50%{background-color:#8ff08f}66%{background-color:#7fe6ff}83%{background-color:#c79bff}}
 @media (prefers-reduced-motion:reduce){.cell.s-FC,.rb{animation:none}}
 .cell.hide{display:none}
 
