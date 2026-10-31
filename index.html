@@ -72,9 +72,11 @@ body{font:14px/1.4 -apple-system,"Noto Sans SC","Segoe UI",Roboto,sans-serif;
 .grid{display:grid;gap:5px;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));margin-top:8px}
 
 /* ---------- 谱面方格 ---------- */
+/* 两种样式：默认「整格」= 整格底色就是灯；body.skin-bar「选曲条」= 左侧灯管 + 右侧标签 */
 .cell{position:relative;border-radius:7px;padding:4px 5px 3px;min-height:58px;
       display:flex;flex-direction:column;color:#111;overflow:hidden;
       border:1px solid rgba(0,0,0,.25);background:var(--NOPLAY)}
+.cell .pl{display:contents}
 .cell .ct{display:flex;align-items:center;gap:4px;font-size:9px;font-weight:800;letter-spacing:.3px}
 .cell .ct b{background:rgba(0,0,0,.78);border-radius:3px;padding:0 3px;line-height:13px;color:#fff}
 /* 谱面类型配色: N蓝 H黄 A红 L紫 (B绿) */
@@ -90,20 +92,30 @@ body{font:14px/1.4 -apple-system,"Noto Sans SC","Segoe UI",Roboto,sans-serif;
 .cell .bt{display:flex;align-items:baseline;gap:4px;font-size:8.5px;opacity:.6;font-weight:700;
       letter-spacing:.2px;white-space:nowrap;overflow:hidden}
 .cell .bt .nt{margin-left:auto}
-.cell .pick{position:absolute;inset:0;opacity:0;width:100%;height:100%;border:0;appearance:none}
+.cell .pick{position:absolute;inset:0;opacity:0;width:100%;height:100%;border:0;appearance:none;z-index:2}
 .cell.s-NOPLAY{background:var(--NOPLAY)} .cell.s-FAILED{background:var(--FAILED)}
 .cell.s-AC{background:var(--AC)} .cell.s-EC{background:var(--EC)}
 .cell.s-NC{background:var(--NC)} .cell.s-HC{background:var(--HC)}
 .cell.s-EXC{background:var(--EXC)} .cell.s-FC{background:var(--FC)}
 .cell.s-AC,.cell.s-HC{color:#fff}
-.cell.s-FC,.rb{animation:rb .6s linear infinite}
-/* EXC 红→黄→白→黄 硬切换来回闪，无渐变（每色 0.15s，一个来回 0.6s，和 FC 同速） */
-.cell.s-EXC,.rx{animation:rx .6s step-end infinite}
-@keyframes rx{0%,100%{background-color:#ff6b6b}25%{background-color:#f5c400}
-  50%{background-color:#ffffff}75%{background-color:#f5c400}}
+
+/* 选曲条样式：左侧一条灯管露出灯色，右侧是贴在灯上的曲目标签；标签纸略透，灯色淡淡透上来 */
+.skin-bar .cell{border:0;border-radius:6px;padding:0 0 0 10px;min-height:60px;flex-direction:row;
+      color:#15171c;box-shadow:0 1px 2px rgba(0,0,0,.55)}
+/* 灯管的圆柱高光 */
+.skin-bar .cell::before{content:"";position:absolute;left:0;top:0;bottom:0;width:10px;pointer-events:none;
+      background:linear-gradient(90deg,rgba(0,0,0,.18),rgba(255,255,255,.55) 35%,rgba(255,255,255,.1) 65%,rgba(0,0,0,.22))}
+.skin-bar .cell .pl{position:relative;flex:1;min-width:0;display:flex;flex-direction:column;
+      padding:4px 5px 3px;border-radius:4px 6px 6px 4px;
+      background:linear-gradient(180deg,rgba(255,255,255,.9),rgba(255,255,255,.8) 50%,rgba(246,247,250,.76));
+      box-shadow:-1px 0 2px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.9),inset 0 -1px 0 rgba(0,0,0,.08)}
+.skin-bar .cell .ct u{border-color:rgba(0,0,0,.4)}
+.skin-bar .cell .bt{border-top:1px solid rgba(0,0,0,.1);padding-top:1px;margin-top:2px}
+
+.cell.s-FC,.rb{animation:rb .3s linear infinite}
 @keyframes rb{0%,100%{background-color:#ff8f8f}16%{background-color:#ffc875}33%{background-color:#fff07a}
   50%{background-color:#8ff08f}66%{background-color:#7fe6ff}83%{background-color:#c79bff}}
-@media (prefers-reduced-motion:reduce){.cell.s-FC,.rb,.cell.s-EXC,.rx{animation:none}}
+@media (prefers-reduced-motion:reduce){.cell.s-FC,.rb{animation:none}}
 .cell.hide{display:none}
 
 #toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(20px);
@@ -148,6 +160,7 @@ body{font:14px/1.4 -apple-system,"Noto Sans SC","Segoe UI",Roboto,sans-serif;
     <select id="filter"></select>
     <span class="fcount" id="fcount"></span>
     <span class="sp"></span>
+    <button id="btnSkin"></button>
     <button id="btnXep">导入分</button>
     <button id="btnExp">导出备份</button>
     <button id="btnImp">导入</button>
@@ -183,7 +196,7 @@ const ST = [
   ['NOPLAY','NOPLAY'],['FAILED','FAILED'],['AC','ASSIST CLEAR'],['EC','EASY CLEAR'],
   ['NC','CLEAR'],['HC','HARD CLEAR'],['EXC','EX HARD CLEAR'],['FC','FULL COMBO']
 ];
-const ANIM = {FC:' class="rb"', EXC:' class="rx"'};   // 带动效的灯（图例 / 进度条用）
+const ANIM = {FC:' class="rb"'};   // 带动效的灯（图例 / 进度条用）
 const RANK = {}; ST.forEach(([k],i)=>RANK[k]=i);
 const EC_R = RANK.EC, HC_R = RANK.HC;
 const CT = {0:'SPB',1:'SPN',2:'SPH',3:'SPA',4:'SPL',5:'DPB',6:'DPN',7:'DPH',8:'DPA',9:'DPL'};
@@ -269,9 +282,11 @@ function cell(c){
   const tier = TIER[ct % 5];   // 0/5=B 1/6=N 2/7=H 3/8=A 4/9=L
   const gen = Math.floor(mid / 1000);   // musicId 去掉末三位 = 初出代数
   return `<div class="cell s-${s}" data-k="${k}" data-r="${RANK[s]}" data-q="${esc(norm(title))}">
-      <div class="ct"><b class="t${tier}">${CT[ct]||'T'+ct}</b><u title="初出代数">${gen}代</u><span class="lv">☆${lv}</span></div>
-      <div class="tt">${esc(title)}</div>
-      <div class="bt"><span>${label ?? ''}</span><span class="nt">${notes} notes</span></div>
+      <div class="pl">
+        <div class="ct"><b class="t${tier}">${CT[ct]||'T'+ct}</b><u title="初出代数">${gen}代</u><span class="lv">☆${lv}</span></div>
+        <div class="tt">${esc(title)}</div>
+        <div class="bt"><span>${label ?? ''}</span><span class="nt">${notes} notes</span></div>
+      </div>
       <select class="pick" data-k="${k}">${OPTS}</select>
     </div>`;
 }
@@ -482,6 +497,17 @@ xepEl('xepUndo').onclick = ()=>{
   save(); renderTable(); applyFilter(); xepClose();
   toast('已撤销上次导入');
 };
+
+/* ---------- 方格样式切换（只是外观偏好，存本机） ---------- */
+const SKIN_KEY = 'iidx_skin';
+function setSkin(bar){
+  document.body.classList.toggle('skin-bar', bar);
+  document.getElementById('btnSkin').textContent = bar ? '样式：选曲条' : '样式：整格';
+  try { localStorage.setItem(SKIN_KEY, bar ? 'bar' : 'full'); } catch(e){}
+}
+document.getElementById('btnSkin').onclick = ()=> setSkin(!document.body.classList.contains('skin-bar'));
+let skinBar = false; try { skinBar = localStorage.getItem(SKIN_KEY) === 'bar'; } catch(e){}
+setSkin(skinBar);
 
 /* ---------- 启动 ---------- */
 renderTabs(); renderTable();
