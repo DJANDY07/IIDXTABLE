@@ -97,9 +97,12 @@ body{font:14px/1.4 -apple-system,"Noto Sans SC","Segoe UI",Roboto,sans-serif;
 .cell.s-EXC{background:var(--EXC)} .cell.s-FC{background:var(--FC)}
 .cell.s-AC,.cell.s-HC{color:#fff}
 .cell.s-FC,.rb{animation:rb .6s linear infinite}
+/* EXC 在 红-黄-白 之间来回闪（0.3s 单程，一个来回 0.6s，和 FC 同速） */
+.cell.s-EXC,.rx{animation:rx .3s linear infinite alternate}
+@keyframes rx{0%{background-color:#ff6b6b}50%{background-color:#f5c400}100%{background-color:#ffffff}}
 @keyframes rb{0%,100%{background-color:#ff8f8f}16%{background-color:#ffc875}33%{background-color:#fff07a}
   50%{background-color:#8ff08f}66%{background-color:#7fe6ff}83%{background-color:#c79bff}}
-@media (prefers-reduced-motion:reduce){.cell.s-FC,.rb{animation:none}}
+@media (prefers-reduced-motion:reduce){.cell.s-FC,.rb,.cell.s-EXC,.rx{animation:none}}
 .cell.hide{display:none}
 
 #toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(20px);
@@ -179,6 +182,7 @@ const ST = [
   ['NOPLAY','NOPLAY'],['FAILED','FAILED'],['AC','ASSIST CLEAR'],['EC','EASY CLEAR'],
   ['NC','CLEAR'],['HC','HARD CLEAR'],['EXC','EX HARD CLEAR'],['FC','FULL COMBO']
 ];
+const ANIM = {FC:' class="rb"', EXC:' class="rx"'};   // 带动效的灯（图例 / 进度条用）
 const RANK = {}; ST.forEach(([k],i)=>RANK[k]=i);
 const EC_R = RANK.EC, HC_R = RANK.HC;
 const CT = {0:'SPB',1:'SPN',2:'SPH',3:'SPA',4:'SPL',5:'DPB',6:'DPN',7:'DPH',8:'DPA',9:'DPL'};
@@ -235,7 +239,7 @@ function renderTabs(){
 function renderTable(){
   const t = DATA[cur];
   let h = `<div class="ov"><h2>分段进度</h2>${t.groups.map((g,i)=>ovRow(g,i)).join('')}
-    <div class="legend">${ST.map(([k,n])=>`<span><i${k==='FC'?' class="rb"':''} style="background:var(--${k})"></i>${n}</span>`).join('')}</div></div>`;
+    <div class="legend">${ST.map(([k,n])=>`<span><i${ANIM[k]||''} style="background:var(--${k})"></i>${n}</span>`).join('')}</div></div>`;
   h += t.groups.map((g,i)=>`
     <section class="sec" id="g${i}">
       <div class="sechead" data-fold="${i}">
@@ -278,7 +282,7 @@ function counts(charts){
   return n;
 }
 function barHTML(n, total){
-  return ST.map(([k],i)=> n[i] ? `<i${k==='FC'?' class="rb"':''} style="background:var(--${k});width:${n[i]/total*100}%"></i>` : '').join('');
+  return ST.map(([k],i)=> n[i] ? `<i${ANIM[k]||''} style="background:var(--${k});width:${n[i]/total*100}%"></i>` : '').join('');
 }
 function sum(n, from){ let s=0; for(let i=from;i<8;i++) s+=n[i]; return s; }
 
