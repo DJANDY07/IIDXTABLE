@@ -1,5 +1,5 @@
-const C = 'iidx-table-254401';
-const FILES = ['./', './index.html', './manifest.webmanifest', './icon.svg'];
+const C = 'iidx-table-1128966';
+const FILES = ["./", "./index.html", "./manifest.webmanifest", "./icon.svg", "./fonts/inter.woff2", "./fonts/archivo.woff2", "./fonts/plexmono-400.woff2", "./fonts/plexmono-600.woff2", "./fonts/caveat.woff2", "./fonts/oswald.woff2", "./fonts/notosanssc.woff2", "./fonts/fusion-pixel.woff2"];
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(C).then(c => c.addAll(FILES)).then(() => self.skipWaiting()));
 });
